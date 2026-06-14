@@ -65,10 +65,33 @@ Contract: `@async/dispatch.cli`
 | `cli.runtime-wait` | runtime wait command | internal | preview | active |  |  |
 | `cli.runtime-wake` | runtime wake command | internal | preview | active |  |  |
 
+### Skills
+
+| Feature | Title | Release | Stability | Lifecycle | Replacement | Docs |
+| --- | --- | --- | --- | --- | --- | --- |
+| `cli.skills-check` | skills check command for bundled skill validation | internal | preview | active |  |  |
+| `cli.skills-install` | skills install command for installing bundled Codex skills | internal | preview | active |  |  |
+| `cli.skills-json` | JSON output for skill automation commands | internal | preview | active |  |  |
+| `cli.skills-list` | skills list command for bundled Codex skills | internal | preview | active |  |  |
+| `cli.skills-path` | skills path command for bundled skill discovery | internal | preview | active |  |  |
+| `cli.skills-status` | skills status command for installed Codex skill state | internal | preview | active |  |  |
+
+## Dispatch Console
+
+Contract: `@async/dispatch.console`
+
+### Work
+
+| Feature | Title | Release | Stability | Lifecycle | Replacement | Docs |
+| --- | --- | --- | --- | --- | --- | --- |
+| `console.work-api` | Machine-readable work discovery endpoint | internal | preview | active |  |  |
+| `console.work-discovery` | Console discovers absolute root runtimes and dependent work | internal | preview | active |  |  |
+
 ## Supported Surfaces
 
 | Contract | Hash | Features |
 | --- | --- | --- |
-| `@async/dispatch.cli` | `sha256:212dccdeceb2f6d598b99d4bb3ae2627ad069c1b2892ad97daf759f669dc09ad` | `cli.node-show`, `cli.node-tree`, `cli.runtime-plan-code`, `cli.runtime-wait`, `cli.runtime-wake` |
+| `@async/dispatch.cli` | `sha256:907a0c574b6d413a7fb4fbacda207693419211b057da5b0177cbe82170f01191` | `cli.node-show`, `cli.node-tree`, `cli.runtime-plan-code`, `cli.runtime-wait`, `cli.runtime-wake`, `cli.skills-check`, `cli.skills-install`, `cli.skills-json`, `cli.skills-list`, `cli.skills-path`, `cli.skills-status` |
+| `@async/dispatch.console` | `sha256:5675b66d40b533f97ca5bcc3ef02b96f556e9837d8446c0ca1580da9b36e74fe` | `console.work-api`, `console.work-discovery` |
 | `@async/dispatch.runtime-scheduler` | `sha256:a0e978da17bdf3d2282467aca75893af520864464b742d6bfe7113117d10f9be` | `runtime.external-wait`, `runtime.human-wake`, `scheduler.idle`, `scheduler.paused-human`, `scheduler.waiting-external` |
 | `@async/dispatch.workflow-nodes` | `sha256:d18b09c5e204068c5da38d446243bcff0a9fd8a3fc1f353e1994fbeb7e3e435c` | `node.containment`, `node.direction-gate`, `node.human-blocker`, `node.overlay`, `node.receipt-ref`, `node.status-aggregation` |

@@ -148,6 +148,77 @@
           "stability": "preview",
           "lifecycle": "active",
           "group": "nodes"
+        },
+        {
+          "id": "cli.skills-path",
+          "title": "skills path command for bundled skill discovery",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "skills"
+        },
+        {
+          "id": "cli.skills-list",
+          "title": "skills list command for bundled Codex skills",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "skills"
+        },
+        {
+          "id": "cli.skills-install",
+          "title": "skills install command for installing bundled Codex skills",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "skills"
+        },
+        {
+          "id": "cli.skills-status",
+          "title": "skills status command for installed Codex skill state",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "skills"
+        },
+        {
+          "id": "cli.skills-check",
+          "title": "skills check command for bundled skill validation",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "skills"
+        },
+        {
+          "id": "cli.skills-json",
+          "title": "JSON output for skill automation commands",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "skills"
+        }
+      ]
+    },
+    {
+      "format": "api-contract.catalog.v1",
+      "contractId": "@async/dispatch.console",
+      "title": "Dispatch Console",
+      "features": [
+        {
+          "id": "console.work-discovery",
+          "title": "Console discovers absolute root runtimes and dependent work",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "work"
+        },
+        {
+          "id": "console.work-api",
+          "title": "Machine-readable work discovery endpoint",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "work"
         }
       ]
     }
@@ -184,7 +255,21 @@
         "cli.runtime-wait",
         "cli.runtime-plan-code",
         "cli.node-tree",
-        "cli.node-show"
+        "cli.node-show",
+        "cli.skills-path",
+        "cli.skills-list",
+        "cli.skills-install",
+        "cli.skills-status",
+        "cli.skills-check",
+        "cli.skills-json"
+      ]
+    },
+    {
+      "format": "api-contract.surface.v1",
+      "contractId": "@async/dispatch.console",
+      "features": [
+        "console.work-discovery",
+        "console.work-api"
       ]
     }
   ]

@@ -1,6 +1,6 @@
 # @async/dispatch
 
-Greenfield local coordination kernel for goal-first root chat work.
+Installable local coordination CLI for goal-first async chat work.
 
 Dispatch keeps the coordination engine outside individual skills:
 
@@ -9,45 +9,102 @@ Goal Seed -> Context Discovery -> Refined Goal Charter -> Human Draft -> Review 
 ```
 
 The CLI owns IDs, storage, validation, plan compilation, and the local console.
-Skills can stay thin and call into Dispatch after this proves itself.
+Bundled Codex skills stay thin and call into Dispatch instead of duplicating
+runtime state in prompts.
 
 ## Install
 
-Dispatch is source-first right now. The CLI itself has no runtime package
-dependencies, but full verification dogfoods adjacent Async helper packages.
+Dispatch is an installable CLI with bundled Codex skills. Install the CLI first,
+then install the skills that teach Codex how to use the CLI for async root chats,
+domain chats, workers, receipts, idle/wake handling, and code-routing decisions.
 
 Requirements:
 
 - Node.js 24 or newer
-- pnpm 10.20 or newer
-- Optional for full verification: sibling checkouts of `pipeline`, `claims`,
-  and `api-contract` beside this repo
 
-Minimal CLI setup:
+Install the CLI from the public npm registry:
+
+```bash
+pnpm add --global @async/dispatch
+async-dispatch help
+```
+
+The same package also works with npm directly:
+
+```bash
+npm install --global @async/dispatch
+async-dispatch help
+```
+
+Use `corepack` only if you want pnpm to manage global installs on a fresh
+machine:
+
+```bash
+corepack enable
+pnpm add --global @async/dispatch
+async-dispatch help
+```
+
+For an unpublished local build or release candidate, install the checkout as a
+global tarball instead of running source files directly:
+
+```bash
+corepack enable
+pnpm install
+PACK_DIR="$(mktemp -d)"
+pnpm pack --pack-destination "$PACK_DIR"
+pnpm add --global "$PACK_DIR"/async-dispatch-*.tgz
+async-dispatch help
+```
+
+Install the bundled Codex skills:
+
+```bash
+async-dispatch skills install
+async-dispatch skills status
+```
+
+By default that writes to `~/.codex/skills`. Installed Dispatch-managed skills
+include metadata with the package version and source hash so `skills status` can
+report `missing`, `current`, `stale`, `modified`, or `unmanaged`.
+
+Existing skill folders are skipped unless they are missing or you explicitly ask
+for replacement. To update Dispatch-managed skills from a newer package, use:
+
+```bash
+async-dispatch skills install --force
+```
+
+Unmanaged folders are not replaced by `--force`; use `--replace-unmanaged` only
+after deciding the existing folder should be backed up and replaced.
+
+Use `--skill` to install one bundled skill:
+
+```bash
+async-dispatch skills install --skill dispatch-root-runtime
+```
+
+## Development From Checkout
+
+Source development still works from a checkout. Use this when changing Dispatch
+itself, validating a release, or editing the bundled skills before publishing an
+updated package.
+
+Development requires pnpm 10.20 or newer.
 
 ```bash
 git clone <dispatch-repo-url> dispatch
 cd dispatch
 corepack enable
 pnpm install
-node src/cli.js help
-```
-
-Install the `async-dispatch` command from a checkout:
-
-```bash
 pnpm link --global
 async-dispatch help
+async-dispatch skills install
+async-dispatch skills status
 ```
 
-If global linking is not configured on your machine, use the direct command
-form instead:
-
-```bash
-node src/cli.js <command>
-```
-
-Full local development setup expects this layout:
+Full local verification dogfoods adjacent Async helper packages. The expected
+development layout is:
 
 ```text
 async/
@@ -61,8 +118,27 @@ Build or verify the helper repos first if their `dist/` folders are missing,
 then run Dispatch verification:
 
 ```bash
-cd dispatch
+cd ../pipeline
+pnpm install
+pnpm run build
+
+cd ../api-contract
+pnpm install
+pnpm run build
+
+cd ../claims
+pnpm install
+pnpm run build
+
+cd ../dispatch
 pnpm run pipeline:verify
+```
+
+If you only need the Dispatch CLI and do not have the helper repos yet, use the
+standalone gate:
+
+```bash
+pnpm test
 ```
 
 `pipeline:verify` creates ignored `.async/` run and cache artifacts. Runtime
@@ -74,26 +150,32 @@ Use a temporary home for demos so you do not touch your real Dispatch ledger:
 
 ```bash
 export ASYNC_DISPATCH_HOME="$(mktemp -d)"
+dispatch() { async-dispatch "$@"; }
 ```
 
 Create and start a small runtime:
 
 ```bash
-GOAL=$(async-dispatch goal init --seed "Coordinate a local release" | awk '/goalId:/ {print $2}')
-PLAN=$(async-dispatch plan draft "$GOAL" | awk '/planId:/ {print $2}')
-async-dispatch plan ready "$PLAN" --note "ready"
-BOARD=$(async-dispatch plan compile "$PLAN" | awk '/boardId:/ {print $2}')
-async-dispatch board approve "$BOARD" --note "approved"
-LEDGER=$(async-dispatch runtime start "$BOARD" | awk '/ledgerId:/ {print $2}')
-async-dispatch node add "$LEDGER" --kind phase --title "Discovery"
-async-dispatch node tree "$LEDGER"
+GOAL=$(dispatch goal init --seed "Coordinate a local release" | awk '/goalId:/ {print $2}')
+PLAN=$(dispatch plan draft "$GOAL" | awk '/planId:/ {print $2}')
+dispatch plan ready "$PLAN" --note "ready"
+BOARD=$(dispatch plan compile "$PLAN" | awk '/boardId:/ {print $2}')
+dispatch board approve "$BOARD" --note "approved"
+LEDGER=$(dispatch runtime start "$BOARD" | awk '/ledgerId:/ {print $2}')
+dispatch node add "$LEDGER" --kind phase --title "Discovery"
+dispatch node tree "$LEDGER"
 ```
 
 Open the local console:
 
 ```bash
-async-dispatch console --port 8787
+dispatch console --port 8787
 ```
+
+The console renders a Work Discovery board. It finds every absolute root runtime
+and shows the board tasks, workers, domain tasks, nodes, dispatch plans, waits,
+inbox events, receipts, child ledgers, and linked threads that depend on that root. A
+watcher can read the same projection from `/api/work`.
 
 ## Conceptual Model
 
@@ -111,9 +193,9 @@ coordination explicit: runnable work stays `active`, known human blockers become
 `paused-human`, real timers become `waiting-external`, and no useful work
 becomes `idle`.
 
-## GoalBuddy Lessons To Borrow
+## Dispatch Control Discipline
 
-GoalBuddy reinforces the parts Dispatch should make first-class:
+Dispatch makes root-chat coordination first-class:
 
 - Start with an oracle: record the observable success proof before runtime work
   starts, then keep checking receipts against it.
@@ -129,10 +211,12 @@ GoalBuddy reinforces the parts Dispatch should make first-class:
 - Finish with an audit that maps current receipts back to the original goal and
   success proof.
 
-Dispatch should not copy GoalBuddy's exact `docs/goals/<slug>` board layout.
-Dispatch's source of truth is its CLI-managed ledger. GoalBuddy's one-active-task
-discipline maps to one active writer per owned scope; Dispatch can still run
-parallel lanes when ownership is disjoint and root has an integration point.
+Dispatch's source of truth is its CLI-managed board and runtime ledger, not a
+generated repo artifact. The console is the live UI: it discovers each absolute
+root runtime, then shows the board tasks, workers, domain tasks, nodes,
+dispatch plans, waits, inbox events, receipts, child ledgers, and linked threads
+that depend on that root. Keep one active writer per owned scope; run parallel
+lanes only when ownership is disjoint and root has an integration point.
 
 ## Workflow Improvement Loop
 
@@ -217,37 +301,47 @@ state is `~/.async/dispatch` unless `ASYNC_DISPATCH_HOME` is set.
 
 ## Codex Setup
 
-When Codex uses this repo, bootstrap from the actual checkout and make the
-runtime state explicit before doing work.
+Codex should normally use the installed Dispatch skills plus the installed
+`async-dispatch` command. The checkout is only required when the task is to
+change Dispatch itself.
 
 Checklist for a new Codex thread:
 
-1. Confirm the checkout and package manager:
+1. Confirm the CLI and installed skills:
 
    ```bash
-   pwd
-   pnpm --version
-   node src/cli.js help
+   async-dispatch help
+   async-dispatch skills status
    ```
 
-2. Choose storage:
+2. Install or refresh the bundled skills if they are missing or stale:
+
+   ```bash
+   async-dispatch skills install
+   ```
+
+   Use `async-dispatch skills install --force` only when intentionally updating
+   Dispatch-managed installed skill copies from the current package.
+
+3. Choose storage:
    - Real ongoing work: leave `ASYNC_DISPATCH_HOME` unset so state goes to
      `~/.async/dispatch`.
    - Demo or test work: set `ASYNC_DISPATCH_HOME="$(mktemp -d)"`.
 
-3. Prefer the linked CLI when available:
+4. Smoke-test the selected storage:
 
    ```bash
    async-dispatch snapshot
    ```
 
-   If it is not linked, use:
+5. In a fresh Codex session, use the installed skills when their triggers match:
+   - `$dispatch-root-runtime` for broad root-chat coordination.
+   - `$dispatch-code-routing` before code edits that might split into lanes,
+     worktrees, child chats, or domain-owner chats.
+   - `$dispatch-skill-evolution` when changing the bundled Dispatch skills or
+     promoting workflow lessons into them.
 
-   ```bash
-   node src/cli.js snapshot
-   ```
-
-4. For a new user goal, move through the hard boundaries:
+6. For a new user goal, move through the hard boundaries:
    - `goal init`
    - `context add` for discovered facts
    - `plan draft` or `plan template human-draft`
@@ -257,7 +351,7 @@ Checklist for a new Codex thread:
    - `board approve`
    - `runtime start`
 
-5. Once a runtime exists, treat the ledger as source of truth:
+7. Once a runtime exists, treat the ledger as source of truth:
    - Use `node add`, `node gate`, `node tree`, and `node show` for recursive
      phases, loops, checkpoints, tasks, lanes, gates, and lessons.
    - Before writing code, record routing with `runtime plan-code`.
@@ -269,17 +363,19 @@ Checklist for a new Codex thread:
    - Use `runtime wake` when the runtime is idle and the human says something
      new.
 
-6. Before claiming the repo is healthy, run the strongest available local gate:
+8. Before claiming the repo is healthy, run the strongest available local gate
+   from the Dispatch checkout:
 
    ```bash
    pnpm run pipeline:verify
    ```
 
-   If the helper repos are not present, run the narrow smoke path instead:
+   If the helper repos or their `dist/` folders are not present, run the narrow
+   smoke path instead:
 
    ```bash
-   node src/cli.js help
-   node src/cli.js snapshot
+   async-dispatch help
+   async-dispatch snapshot
    ```
 
 Codex should not invent sleeps or private scratch state. If there is runnable
@@ -287,19 +383,39 @@ work, dispatch it. If the only valid action is a timer or external event, record
 an external wait. If nothing is actionable, let the scheduler become `idle` and
 wait for `runtime wake`.
 
-## Repo-Local Skills
+## Bundled Codex Skills
 
-The `skills/` directory contains Dispatch-native skill drafts:
+The `skills/` directory is part of the package. These skills ship with
+`@async/dispatch` and are installed into Codex with
+`async-dispatch skills install`.
 
 - `dispatch-root-runtime`: goal, draft, board, runtime, worker, receipt, idle,
   and wake coordination.
 - `dispatch-code-routing`: quick code-routing decisions before edits, including
   root work, scouts, worktrees, child chats, and domain-owner chats.
-- `dispatch-skill-evolution`: evolving these repo-local skills before promoting
-  them into installed Codex skills.
+- `dispatch-skill-evolution`: evolving bundled Dispatch skills before publishing
+  or installing updated copies.
 
-These skills should stay thin. They should tell Codex when to call
-`async-dispatch`; they should not duplicate ledger state in long prompts.
+The skills should stay thin. They tell Codex when to call `async-dispatch`; they
+should not duplicate ledger state in long prompts.
+
+During Dispatch development, edit bundled skills in `skills/<skill-name>/`, then
+validate the source copy:
+
+```bash
+pnpm run skills:check
+```
+
+After validation, install them for local Codex use:
+
+```bash
+async-dispatch skills install --force
+async-dispatch skills status
+```
+
+Publishing the package and installing skills are separate actions. A fresh Codex
+session only sees the workflow after the skills are installed into the Codex
+skills directory.
 
 ## Commands
 
@@ -337,6 +453,10 @@ async-dispatch node tree <ledgerId>
 async-dispatch node show <ledgerId> --node-id N001
 async-dispatch worker complete-task <ledgerId> --worker-id W001 --task-id DT001 --summary "Reviewed" --verification "root receipt"
 async-dispatch worker close-domain <ledgerId> --worker-id W001 --note "Domain backlog drained"
+async-dispatch skills list
+async-dispatch skills status
+async-dispatch skills check
+async-dispatch skills install --force
 async-dispatch console
 ```
 

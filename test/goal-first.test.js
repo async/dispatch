@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { renderConsoleHtml } from "../src/console-server.js";
+import { buildWorkDiscovery, renderConsoleHtml } from "../src/console-server.js";
 import {
   addPlanDecision,
   addNode,
@@ -662,7 +662,7 @@ test("node receipts reference the append-only receipt log", async () => {
     nodeId: phase.node.id,
     requirement: "tests",
     summary: "Red/green tests captured.",
-    verification: "npm test -- scheduler"
+    verification: "pnpm test -- scheduler"
   });
   assert.equal(tests.node.status, "done");
 
@@ -670,7 +670,7 @@ test("node receipts reference the append-only receipt log", async () => {
     nodeId: phase.node.id,
     requirement: "implementation",
     summary: "Implementation completed.",
-    verification: "npm test"
+    verification: "pnpm test"
   });
   const receipts = await readJsonl(path.join(ledgerDir(home, ledger.id), "receipts.jsonl"));
 
@@ -866,6 +866,51 @@ test("console shows goal, plan, board, runtime, receipts, and trace history", as
   assert.match(html, /Root scheduler started/);
   assert.match(html, /Console should show plan decisions before runtime/);
   assert.match(html, /Validated plan traceability/);
+});
+
+test("console discovers absolute root chats and dependent work", async () => {
+  const home = await tempHome();
+  const root = await runtimeFor(home, "Watch absolute root work");
+  const child = await runtimeFor(home, "Child dependency work");
+  await assignWorker(home, root.ledger.id, {
+    workerType: "nested-root",
+    ownsDomain: true,
+    domain: "ui",
+    thread: "thread-ui-domain",
+    childLedger: child.ledger.id,
+    task: "Build root watch board"
+  });
+  await recordCodeDispatchPlan(home, root.ledger.id, {
+    objective: "Render root dependency graph",
+    route: "domain-owner-chat",
+    domain: "ui",
+    ownership: "src/console-server.js",
+    verify: "pnpm test"
+  });
+  await appendReceipt(home, root.ledger.id, {
+    taskId: "T001",
+    summary: "Root watch board rendered child dependencies.",
+    verification: "pnpm test"
+  });
+  await recordExternalWait(home, root.ledger.id, {
+    nextCheckAt: "2026-06-14T18:00:00.000Z",
+    reason: "Wait for child worker receipt"
+  });
+
+  const snapshot = await loadSnapshot(home);
+  const discovery = buildWorkDiscovery(snapshot);
+  const html = renderConsoleHtml(snapshot);
+
+  assert.equal(discovery.roots.length, 1);
+  assert.equal(discovery.roots[0].ledgerId, root.ledger.id);
+  assert.ok(discovery.roots[0].dependencies.some((dependency) => dependency.type === "child-ledger" && dependency.id === child.ledger.id));
+  assert.match(html, /Work Discovery/);
+  assert.match(html, /Absolute Root Chat/);
+  assert.match(html, /Build root watch board/);
+  assert.match(html, /Render root dependency graph/);
+  assert.match(html, /Root watch board rendered child dependencies/);
+  assert.match(html, /thread-ui-domain/);
+  assert.match(html, /Wait for child worker receipt/);
 });
 
 async function runtimeFor(home, seed) {

@@ -1,13 +1,13 @@
 ---
 name: dispatch-skill-evolution
-description: Evolve repo-local async-dispatch skills before updating installed Codex skills. Use when drafting, reviewing, validating, or promoting Dispatch workflow skills that will eventually replace or update personal skills such as root-chat coordination, code routing, idle runtime handling, or domain-owner workflows.
+description: Evolve bundled async-dispatch skills before publishing or installing updated Codex skills. Use when drafting, reviewing, validating, or promoting Dispatch workflow skills for root-chat coordination, code routing, idle runtime handling, or domain-owner workflows.
 ---
 
 # Dispatch Skill Evolution
 
 ## Overview
 
-Keep new Dispatch workflow skills repo-local until the CLI behavior, tests, and real usage prove the workflow. Promote to installed skills only after validation and an explicit decision.
+Keep new Dispatch workflow skills in the package source until the CLI behavior, tests, and real usage prove the workflow. Install or publish updated skills only after validation and an explicit decision.
 
 ## Workflow
 
@@ -16,7 +16,7 @@ Keep new Dispatch workflow skills repo-local until the CLI behavior, tests, and 
    - Keep each skill focused on one job.
    - Prefer instructions that call `async-dispatch` instead of duplicating runtime state rules.
    - Preserve the framing that Dispatch is a small state-machine and queue runtime, not a broad job system.
-   - When borrowing from GoalBuddy, ADR-style decision records, or another local workflow, encode the reusable rule as a Dispatch lesson first; do not copy installed skill layout or generated artifacts into Dispatch.
+   - When importing ADR-style decision records or another local workflow, encode the reusable rule as a Dispatch lesson first; do not copy external layouts or generated artifacts into Dispatch.
 
 2. Keep skill bodies concise.
    - Put trigger conditions in YAML `description`.
@@ -25,19 +25,20 @@ Keep new Dispatch workflow skills repo-local until the CLI behavior, tests, and 
    - Do not add README, changelog, or install notes inside a skill folder.
 
 3. Validate locally.
-   - Run the `quick_validate.py` script from the system `skill-creator` skill against `skills/<skill-name>`.
+   - Run `pnpm run skills:check` to validate all bundled Dispatch skills.
+   - Run the `quick_validate.py` script from the system `skill-creator` skill against `skills/<skill-name>` when debugging a specific skill.
    - Run repo tests when the skill depends on current CLI behavior.
    - Fix validation problems before considering install or promotion.
 
 4. Forward-test before promotion when behavior is complex.
-   - Use realistic prompts against the repo-local skill.
+   - Use realistic prompts against the source skill.
    - Pass the skill path and task, not hidden expected answers.
    - Verify whether a fresh agent discovers the right workflow.
 
 5. Promote deliberately.
-   - Update installed skills only after the repo-local skill is validated and the human approves.
-   - Keep repo and installed copies clearly separated during promotion.
-   - After installing, run a fresh-thread discoverability check.
+   - Update installed skills only after the source skill is validated and the human approves.
+   - Keep source and installed copies clearly separated during promotion.
+   - Install with `async-dispatch skills install --force`, inspect `async-dispatch skills status`, then run a fresh-thread discoverability check.
 
 6. Feed lessons back into the workflow.
    - Start from concrete evidence: receipts, blockers, failed verification, reroutes, waits, or user corrections.
@@ -46,9 +47,9 @@ Keep new Dispatch workflow skills repo-local until the CLI behavior, tests, and 
 
 ## Promotion Checklist
 
-- [ ] Repo-local `SKILL.md` has no unfinished template markers.
+- [ ] Source `SKILL.md` has no unfinished template markers.
 - [ ] `agents/openai.yaml` matches the final skill purpose.
-- [ ] `quick_validate.py` passes.
+- [ ] `pnpm run skills:check` passes.
 - [ ] Any Dispatch CLI commands referenced by the skill are implemented and tested.
 - [ ] The skill preserves the state-machine/queue framing for runtime behavior.
 - [ ] The skill was used or forward-tested on a realistic workflow.

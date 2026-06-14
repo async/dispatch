@@ -18,7 +18,7 @@ Conceptually, treat Dispatch as a small state-machine and queue runtime:
 - closeout lessons improve the workflow after real receipts, blockers, reroutes,
   waits, or verification failures.
 
-For detailed workflow learning rules, use [references/workflow-improvement-loop.md](references/workflow-improvement-loop.md). For GoalBuddy-derived task/oracle/receipt discipline, use [references/goalbuddy-lessons.md](references/goalbuddy-lessons.md).
+For detailed workflow learning rules, use [references/workflow-improvement-loop.md](references/workflow-improvement-loop.md). For Dispatch-native board, watch, ownership, and receipt discipline, use [references/dispatch-control-discipline.md](references/dispatch-control-discipline.md).
 
 ## Workflow
 
@@ -38,6 +38,7 @@ For detailed workflow learning rules, use [references/workflow-improvement-loop.
    - Run `plan compile <planId>`.
    - Run `board approve <boardId>` only after the human has reviewed the board.
    - Start runtime with `runtime start <boardId>`.
+   - Use the console to watch every absolute root runtime and its dependent work.
 
 4. Assign long-lived domain owners for durable repo/domain work.
    - Use `worker assign <ledgerId> --owns-domain true --domain <name> --worker-type nested-root`.
@@ -62,7 +63,7 @@ For detailed workflow learning rules, use [references/workflow-improvement-loop.
 7. Close the loop with lessons learned.
    - During phase and final audits, inspect receipts, blockers, waits, reroutes, failed verification, and attempted sleeps.
    - Capture reusable workflow lessons as `trigger`, `observed`, `rule`, `evidence`, `followUp`, and `status`.
-   - Turn validated lessons into repo-local runtime tests, docs, or skill guidance before installed skill promotion.
+   - Turn validated lessons into runtime tests, docs, or bundled skill guidance before installed skill updates.
 
 ## Guardrails
 
