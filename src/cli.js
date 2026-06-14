@@ -2,6 +2,14 @@
 import { startConsole } from "./console-server.js";
 import { renderHumanDraftTemplate, renderReferenceMapTemplate } from "./draft-template.js";
 import {
+  bundledSkillsDir,
+  defaultCodexSkillsDir,
+  getSkillInstallStatus,
+  installBundledSkills,
+  listBundledSkills,
+  validateBundledSkills
+} from "./skills.js";
+import {
   addPlanDecision,
   addNode,
   addNodeDecisionGate,
@@ -64,6 +72,83 @@ async function main(argv) {
     return;
   }
   const flags = parseFlags([subject, ...rest].filter(Boolean));
+
+  if (domain === "skills" && action === "path") {
+    const value = {
+      sourceDir: bundledSkillsDir(),
+      defaultTarget: defaultCodexSkillsDir()
+    };
+    if (flags.json) {
+      printJson(value);
+      return;
+    }
+    printObject("Bundled skills", value);
+    return;
+  }
+  if (domain === "skills" && action === "list") {
+    const skills = await listBundledSkills();
+    if (flags.json) {
+      printJson({ skills });
+      return;
+    }
+    console.log("Bundled skills");
+    for (const skill of skills) {
+      console.log(`${skill.name}: ${skill.description}`);
+    }
+    return;
+  }
+  if (domain === "skills" && action === "status") {
+    const status = await getSkillInstallStatus({
+      targetDir: flags.target || defaultCodexSkillsDir(),
+      skills: flags.skill
+    });
+    if (flags.json) {
+      printJson(status);
+      return;
+    }
+    printObject("Skills status", { targetDir: status.targetDir });
+    for (const result of status.results) {
+      const reason = result.reason ? ` (${result.reason})` : "";
+      console.log(`${result.status}: ${result.name} -> ${result.destinationDir}${reason}`);
+    }
+    return;
+  }
+  if (domain === "skills" && action === "check") {
+    const result = await validateBundledSkills();
+    if (flags.json) {
+      printJson(result);
+    } else if (result.ok) {
+      console.log(`Bundled skills valid: ${result.skills.length}`);
+    } else {
+      console.log("Bundled skills invalid");
+      for (const failure of result.failures) console.log(`- ${failure}`);
+    }
+    if (!result.ok) process.exitCode = 1;
+    return;
+  }
+  if (domain === "skills" && action === "install") {
+    const install = await installBundledSkills({
+      targetDir: flags.target || defaultCodexSkillsDir(),
+      skills: flags.skill,
+      force: Boolean(flags.force),
+      replaceUnmanaged: Boolean(flags.replaceUnmanaged)
+    });
+    if (flags.json) {
+      printJson(install);
+      return;
+    }
+    printObject("Skills install complete", {
+      targetDir: install.targetDir,
+      changed: install.results.filter((result) => result.action !== "skipped").length,
+      skipped: install.results.filter((result) => result.action === "skipped").length
+    });
+    for (const result of install.results) {
+      const reason = result.reason ? ` (${result.reason})` : "";
+      const backup = result.backupDir ? ` backup: ${result.backupDir}` : "";
+      console.log(`${result.action}: ${result.name} -> ${result.destinationDir}${reason}${backup}`);
+    }
+    return;
+  }
 
   if (domain === "goal" && action === "init") {
     const goal = await initGoal(home, { seed: flags.seed });
@@ -388,6 +473,10 @@ function printObject(label, value) {
   }
 }
 
+function printJson(value) {
+  console.log(JSON.stringify(value, null, 2));
+}
+
 function printHelp() {
   console.log(`async-dispatch
 
@@ -428,6 +517,11 @@ Commands:
   worker close-domain <ledgerId> --worker-id W001 --note "..."
   event add <ledgerId> --message "..."
   receipt add <ledgerId> --task-id T001 --summary "..." --verification "..."
+  skills path                         Show bundled skill source and default install target
+  skills list [--json]                List bundled Codex skills
+  skills status [--target ~/.codex/skills] [--skill dispatch-root-runtime] [--json]
+  skills check [--json]               Validate bundled skill metadata
+  skills install [--target ~/.codex/skills] [--skill dispatch-root-runtime] [--force] [--replace-unmanaged] [--json]
   console [--port 8787]
   snapshot
 `);

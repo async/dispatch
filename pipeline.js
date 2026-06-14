@@ -1,9 +1,9 @@
-import { definePipeline, job, sh, task } from "../pipeline/packages/pipeline/dist/index.js";
-import { claimsWorkflowTasks } from "../claims/dist/pipeline.js";
+import { definePipeline, job, sh, task } from "@async/pipeline";
+import { claimsWorkflowTasks } from "@async/claims/pipeline";
 
 const claims = claimsWorkflowTasks({
   task,
-  sh: localClaimsShell
+  sh
 }, {
   registry: "test/claims.json",
   testFiles: ["test/**/*.test.js"],
@@ -21,32 +21,36 @@ export default definePipeline({
       cache: false,
       run: sh`pnpm test`
     }),
+    "skills.check": task({
+      description: "Validate bundled Dispatch skills before install or release.",
+      inputs: ["skills/**/*.md", "skills/**/*.yaml", "src/skills.js", "src/cli.js", "package.json"],
+      cache: false,
+      run: sh`pnpm run skills:check`
+    }),
     "api.surface": task({
       description: "Regenerate the Dispatch API surface ledger from api-contract.json.",
       inputs: ["api-contract.json"],
       outputs: ["API_SURFACE.md"],
       cache: true,
-      run: sh`node ../api-contract/dist/cli.js ledger --manifest api-contract.json --out API_SURFACE.md`
+      run: sh`api-contract ledger --manifest api-contract.json --out API_SURFACE.md`
     }),
     "api.check": task({
       description: "Validate the Dispatch API contract manifest and generated ledger.",
       dependsOn: ["api.surface"],
       inputs: ["api-contract.json", "API_SURFACE.md"],
       cache: false,
-      run: sh`node ../api-contract/dist/cli.js check --manifest api-contract.json && node ../api-contract/dist/cli.js ledger --manifest api-contract.json --check API_SURFACE.md`
+      run: sh`api-contract check --manifest api-contract.json && api-contract ledger --manifest api-contract.json --check API_SURFACE.md`
+    }),
+    "pack.check": task({
+      description: "Verify the public npm package contents without publishing.",
+      dependsOn: ["test", "skills.check", "api.check", "claims"],
+      inputs: ["package.json", "README.md", "API_SURFACE.md", "api-contract.json", "src/**/*.js", "skills/**/*", "templates/**/*"],
+      cache: false,
+      run: sh`npm pack --dry-run --registry=https://registry.npmjs.org`
     }),
     claims
   },
   jobs: {
-    verify: job({ target: ["test", "api.check", "claims"] })
+    verify: job({ target: ["test", "skills.check", "api.check", "claims", "pack.check"] })
   }
 });
-
-function localClaimsShell(strings, ...values) {
-  let command = "";
-  for (let index = 0; index < strings.length; index += 1) {
-    command += strings[index] ?? "";
-    if (index < values.length) command += String(values[index]);
-  }
-  return sh([command.replaceAll("async-claims", "node ../claims/dist/cli.js")]);
-}
