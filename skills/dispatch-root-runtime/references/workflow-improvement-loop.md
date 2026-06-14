@@ -73,10 +73,10 @@ second scheduler, queue, or board.
 
 Do not update installed skills from a single raw observation. Prefer this path:
 
-1. Record the lesson in the repo-local workflow guidance.
+1. Record the lesson in the bundled workflow guidance.
 2. Add or update a runtime test when the lesson maps to behavior.
-3. Use the repo-local skill on a real workflow.
-4. Promote to installed skills only after validation and explicit approval.
+3. Use the source skill on a real workflow.
+4. Install or publish updated skills only after validation and explicit approval.
 
 If a lesson changes actual runtime semantics, update the CLI/model/tests before
 updating skill guidance that depends on it.

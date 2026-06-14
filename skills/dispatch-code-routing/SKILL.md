@@ -9,8 +9,12 @@ description: Route code work before editing in async-dispatch. Use when root cha
 
 Before root writes code, record a small dispatch plan. The goal is not ceremony; it is to prevent root from doing broad work that should be isolated, delegated, or handed to a long-lived domain owner.
 
-Conceptually, code routing turns possible code work into queued lanes with state:
-`needs-boundary`, `ready-to-dispatch`, `active`, `ready-for-review`, `blocked`, `done`, or idle/waiting runtime states.
+Conceptually, `runtime plan-code` records pre-dispatch routing only. Dispatch
+plans use `needs-boundary` until ownership and verification are explicit, then a
+ready status such as `ready-to-dispatch`, `ready-for-domain-owner`, or
+`root-owned`. After a worker or node starts, execution state belongs to
+`worker status`, `node status`, receipts, blockers, or waits. Do not invent new
+dispatch-plan states for execution progress.
 
 For a broader catalog of async opportunities and status timelines, read [references/async-work-patterns.md](references/async-work-patterns.md) when a task has more than one viable lane or when planning multiple workers against one codebase.
 
@@ -39,8 +43,8 @@ This is useful when the test can come online before the implementation is comple
 Record both lanes separately:
 
 ```bash
-async-dispatch runtime plan-code <ledgerId> --objective "Add failing tests for scheduler idle/wake" --route subagent-worktree --worktree "../dispatch-tests" --ownership "test/goal-first.test.js" --verify "npm test"
-async-dispatch runtime plan-code <ledgerId> --objective "Implement scheduler idle/wake support" --route subagent-worktree --worktree "../dispatch-code" --ownership "src/model.js src/cli.js src/console-server.js" --verify "npm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Add failing tests for scheduler idle/wake" --route subagent-worktree --worktree "../dispatch-tests" --ownership "test/goal-first.test.js" --verify "pnpm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Implement scheduler idle/wake support" --route subagent-worktree --worktree "../dispatch-code" --ownership "src/model.js src/cli.js src/console-server.js" --verify "pnpm test"
 ```
 
 Use async polling:
@@ -69,7 +73,7 @@ async-dispatch runtime plan-code <ledgerId> --node-id N003 --objective "..." --r
 For worktree work:
 
 ```bash
-async-dispatch runtime plan-code <ledgerId> --node-id N003 --objective "..." --route subagent-worktree --worktree "../worktree-name" --ownership "src/foo.js test/foo.test.js" --verify "npm test"
+async-dispatch runtime plan-code <ledgerId> --node-id N003 --objective "..." --route subagent-worktree --worktree "../worktree-name" --ownership "src/foo.js test/foo.test.js" --verify "pnpm test"
 ```
 
 ## Boundary Requirements
@@ -83,6 +87,17 @@ Delegated routes are not ready until they have:
 - worktree path for `subagent-worktree`.
 
 If boundaries are missing, Dispatch marks the plan `needs-boundary`. Fill the missing boundary before editing or launching a worker.
+
+## Worktree Launch Checklist
+
+Before executing a `subagent-worktree` lane:
+
+1. Inspect root dirty state with `git status --short --branch`.
+2. Choose a branch and worktree name tied to the lane objective.
+3. Create or verify the worktree before the worker edits files.
+4. Confirm the worker checkout with `pwd` and `git status --short --branch`.
+5. Stop if the worktree would overlap another active lane's ownership.
+6. Record the worker or node that now owns execution status after launch.
 
 ## Root Responsibilities
 

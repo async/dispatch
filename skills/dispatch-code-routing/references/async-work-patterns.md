@@ -92,6 +92,94 @@ Use when external propagation can happen while code work continues.
 
 Use when cleanup is safe only with a behavior guard.
 
+### Reproduction And Fix
+
+- Repro lane owns a minimal failing test, script, fixture, or command transcript.
+- Fix lane owns the smallest implementation change that makes the repro pass.
+- Root rejects fixes that cannot run against the repro lane.
+
+Use when a bug is not yet pinned down or the failure is easy to misdiagnose.
+
+### Type Boundary And Runtime Behavior
+
+- Type lane owns exported types, schema declarations, generated declarations, and compile checks.
+- Runtime lane owns implementation behavior and runtime tests.
+- Root decides whether a type change is a public contract change before runtime expands.
+
+Use when TypeScript/API shape and runtime behavior can drift independently.
+
+### Port/Adapter And Domain Core
+
+- Domain lane owns pure business rules, state transitions, and domain tests.
+- Adapter lane owns CLI, HTTP, filesystem, database, browser, or third-party API integration.
+- Root verifies the adapter does not leak infrastructure assumptions into domain code.
+
+Use when hexagonal boundaries let one worker build core behavior while another wires edges.
+
+### API Producer And Client Consumer
+
+- Producer lane owns server/API/CLI output, status codes, schema, and compatibility receipts.
+- Consumer lane owns client SDK, UI state, command caller, or downstream usage.
+- Root owns the contract handshake and runs a compatibility smoke before accepting either lane.
+
+Use when both sides of an internal contract live in the same repo but should not churn each other.
+
+### Data Migration And Runtime Read Path
+
+- Migration lane owns schema changes, codemods, seed data, and rollback notes.
+- Read-path lane owns query code, loaders, selectors, or compatibility fallback behavior.
+- Root requires a fixture or dry-run that proves old and new data are handled intentionally.
+
+Use when changing persisted shape while code still needs to read existing state.
+
+### Feature Flag Shell And Feature Implementation
+
+- Flag lane owns config, kill switch, default state, and guarded entry points.
+- Feature lane owns the new behavior behind the flag.
+- Root verifies the off path still behaves exactly as before.
+
+Use when risky behavior should merge behind a switch before rollout.
+
+### Dependency Upgrade And Compatibility Repair
+
+- Upgrade lane owns dependency version changes, lockfile updates, and package-manager diagnostics.
+- Repair lane owns source changes required by the new dependency behavior.
+- Root decides whether failures are upgrade regressions, existing bugs, or unsupported environment issues.
+
+Use when an upgrade can proceed while compatibility fixes are being isolated.
+
+### Build/CI Wiring And Product Code
+
+- CI lane owns workflow files, build scripts, cache inputs, environment assumptions, and release gates.
+- Product lane owns source behavior.
+- Root checks that CI proves the intended product behavior, not only that the workflow runs.
+
+Use when build failures and product failures are easy to conflate.
+
+### Observability And Behavior Change
+
+- Observability lane owns logs, metrics, tracing spans, debug counters, or receipt fields.
+- Behavior lane owns the state change or user-visible fix.
+- Root rejects behavior claims that cannot be observed through the agreed signal.
+
+Use when the fix must be diagnosable after merge or during a staged rollout.
+
+### Accessibility/Interaction QA And UI Code
+
+- QA lane owns keyboard, screen reader, mobile, visual, or browser evidence.
+- UI lane owns component and style changes.
+- Root compares QA evidence against the UI lane before marking the feature done.
+
+Use when frontend behavior can look correct while failing interaction or accessibility checks.
+
+### Fixture/Data Generator And Feature Logic
+
+- Fixture lane owns representative sample data, synthetic generators, and edge cases.
+- Feature lane owns code that consumes that data.
+- Root keeps generated data deterministic enough for repeatable verification.
+
+Use when hard-coded happy-path data would hide real integration failures.
+
 ## Recording Lanes
 
 Record each lane independently:
@@ -106,13 +194,18 @@ Use `domain-owner-chat` instead of `subagent-worktree` when the lane belongs to 
 
 Use these examples to decide how async lanes should report status and when root should poll, run cross-lane checks, pause, wait, or go idle.
 
+`runtime plan-code` persists routing state before launch. After launch, record
+progress on the worker or node that owns the lane. Timeline values below are
+worker/node reporting terms unless the row explicitly says `needs-boundary`,
+`ready-to-dispatch`, `ready-for-domain-owner`, or `root-owned`.
+
 ### Example 1: Tests And Code
 
 Initial plan:
 
 ```bash
-async-dispatch runtime plan-code <ledgerId> --objective "Add failing tests for idle/wake scheduler" --route subagent-worktree --worktree "../dispatch-tests" --ownership "test/goal-first.test.js" --verify "npm test"
-async-dispatch runtime plan-code <ledgerId> --objective "Implement idle/wake scheduler" --route subagent-worktree --worktree "../dispatch-code" --ownership "src/model.js src/cli.js src/console-server.js" --verify "npm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Add failing tests for idle/wake scheduler" --route subagent-worktree --worktree "../dispatch-tests" --ownership "test/goal-first.test.js" --verify "pnpm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Implement idle/wake scheduler" --route subagent-worktree --worktree "../dispatch-code" --ownership "src/model.js src/cli.js src/console-server.js" --verify "pnpm test"
 ```
 
 Status timeline:
@@ -121,7 +214,7 @@ Status timeline:
 | --- | --- | --- | --- | --- |
 | T0 | `ready-to-dispatch` | `ready-to-dispatch` | Launch both lanes after boundary review. | `active` |
 | T1 | `ready-for-review`: red test exists | `domain-active` or worker active | Run the red test against the code lane if the touched interface exists. | `active` |
-| T2 | `waiting-code`: test is valid but implementation missing | active | Keep code lane moving; do not ask human yet. | `active` |
+| T2 | `blocked`: test is valid but implementation is not ready | active | Keep code lane moving; do not ask human yet. | `active` |
 | T3 | `ready-for-review`: test now passes against code | `ready-for-review` | Review both diffs, integrate, run final verification. | `active` |
 | T4 | `done` | `done` | Record receipts; close or idle lanes. | `idle` if no more work |
 
@@ -132,8 +225,8 @@ If T1 fails because the test assumes the wrong public contract, root changes the
 Initial plan:
 
 ```bash
-async-dispatch runtime plan-code <ledgerId> --objective "Define CLI contract for runtime wait/wake" --route root --ownership "README.md src/cli.js" --verify "node src/cli.js help"
-async-dispatch runtime plan-code <ledgerId> --objective "Implement runtime wait/wake internals" --route domain-owner-chat --domain dispatch-runtime --ownership "src/model.js src/store.js" --verify "npm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Define CLI contract for runtime wait/wake" --route root --ownership "README.md src/cli.js" --verify "async-dispatch help"
+async-dispatch runtime plan-code <ledgerId> --objective "Implement runtime wait/wake internals" --route domain-owner-chat --domain dispatch-runtime --ownership "src/model.js src/store.js" --verify "pnpm test"
 ```
 
 Status timeline:
@@ -154,7 +247,7 @@ Initial plan:
 
 ```bash
 async-dispatch runtime plan-code <ledgerId> --objective "Document code dispatch routing examples" --route subagent-worktree --worktree "../dispatch-docs" --ownership "README.md skills/dispatch-code-routing/references/async-work-patterns.md" --verify "python3 <validator> skills/dispatch-code-routing"
-async-dispatch runtime plan-code <ledgerId> --objective "Add runtime state support for code dispatch plans" --route subagent-worktree --worktree "../dispatch-runtime" --ownership "src/model.js src/console-server.js test/goal-first.test.js" --verify "npm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Add runtime state support for code dispatch plans" --route subagent-worktree --worktree "../dispatch-runtime" --ownership "src/model.js src/console-server.js test/goal-first.test.js" --verify "pnpm test"
 ```
 
 Status timeline:
@@ -175,7 +268,7 @@ Initial plan:
 
 ```bash
 async-dispatch runtime plan-code <ledgerId> --objective "Scout scheduler files and dirty state" --route subagent --ownership "read-only" --verify "report affected files and risks"
-async-dispatch runtime plan-code <ledgerId> --objective "Implement scheduler change after scout boundary" --route root --ownership "pending scout" --verify "npm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Implement scheduler change after scout boundary" --route root --ownership "pending scout" --verify "pnpm test"
 ```
 
 Status timeline:
@@ -216,8 +309,8 @@ If the watcher is the only remaining lane and the wait is in the future, schedul
 Initial plan:
 
 ```bash
-async-dispatch runtime plan-code <ledgerId> --objective "Add ledger state for gates" --route subagent-worktree --worktree "../dispatch-model" --ownership "src/model.js src/store.js test/goal-first.test.js" --verify "npm test"
-async-dispatch runtime plan-code <ledgerId> --objective "Render gate state in console" --route subagent-worktree --worktree "../dispatch-console" --ownership "src/console-server.js test/goal-first.test.js" --verify "npm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Add ledger state for gates" --route subagent-worktree --worktree "../dispatch-model" --ownership "src/model.js src/store.js test/goal-first.test.js" --verify "pnpm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Render gate state in console" --route subagent-worktree --worktree "../dispatch-console" --ownership "src/console-server.js test/goal-first.test.js" --verify "pnpm test"
 ```
 
 Status timeline:
@@ -232,6 +325,90 @@ Status timeline:
 
 The console lane can start early only on layout scaffolding that does not assume unavailable state.
 
+### Example 7: Reproduction And Fix
+
+Initial plan:
+
+```bash
+async-dispatch runtime plan-code <ledgerId> --objective "Create a minimal repro for duplicate receipt rendering" --route subagent-worktree --worktree "../dispatch-repro" --ownership "test/goal-first.test.js test/fixtures/receipts" --verify "pnpm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Fix duplicate receipt rendering" --route subagent-worktree --worktree "../dispatch-fix" --ownership "src/console-server.js" --verify "pnpm test"
+```
+
+Status timeline:
+
+| Time | Repro lane | Fix lane | Root action | Scheduler |
+| --- | --- | --- | --- | --- |
+| T0 | active | `blocked`: waiting for failing repro | Let the repro lane pin down the failure before broad edits. | `active` |
+| T1 | `ready-for-review`: failing test exists | blocked | Run the repro and confirm it fails for the claimed reason. | `active` |
+| T2 | done | active | Start the fix lane against the accepted repro. | `active` |
+| T3 | done | `ready-for-review` | Run the repro against the fix lane and review the diff scope. | `active` |
+| T4 | done | done | Record receipts for repro and fix. | `idle` if no more work |
+
+If the repro lane cannot reproduce the issue, root should re-scope the bug before launching implementation.
+
+### Example 8: Port/Adapter And Domain Core
+
+Initial plan:
+
+```bash
+async-dispatch runtime plan-code <ledgerId> --objective "Implement release readiness state transitions" --route subagent-worktree --worktree "../dispatch-domain" --ownership "src/model.js test/goal-first.test.js" --verify "pnpm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Wire release readiness CLI commands" --route subagent-worktree --worktree "../dispatch-adapter" --ownership "src/cli.js README.md" --verify "async-dispatch help"
+```
+
+Status timeline:
+
+| Time | Domain lane | Adapter lane | Root action | Scheduler |
+| --- | --- | --- | --- | --- |
+| T0 | active | `blocked`: waiting for accepted state shape | Domain lane defines the source-of-truth behavior first. | `active` |
+| T1 | `ready-for-review`: tests define states | blocked | Root accepts names, statuses, and invariants. | `active` |
+| T2 | done | active | Adapter lane wires commands to the accepted model. | `active` |
+| T3 | done | `ready-for-review` | Run CLI smoke plus domain tests. | `active` |
+| T4 | done | done | Record receipts and update docs if needed. | `idle` if no more work |
+
+If the adapter lane needs a new state not owned by the domain lane, stop and route the decision to root.
+
+### Example 9: API Producer And Client Consumer
+
+Initial plan:
+
+```bash
+async-dispatch runtime plan-code <ledgerId> --objective "Expose stable snapshot fields for workflow nodes" --route subagent-worktree --worktree "../dispatch-producer" --ownership "src/model.js src/store.js api-contract.json" --verify "pnpm run api:check"
+async-dispatch runtime plan-code <ledgerId> --objective "Render workflow node status in console" --route subagent-worktree --worktree "../dispatch-consumer" --ownership "src/console-server.js test/goal-first.test.js" --verify "pnpm test"
+```
+
+Status timeline:
+
+| Time | Producer lane | Consumer lane | Root action | Scheduler |
+| --- | --- | --- | --- | --- |
+| T0 | active | `blocked`: waiting for field contract | Producer establishes snapshot fields and contract docs. | `active` |
+| T1 | `ready-for-review`: fields documented | blocked | Root confirms compatibility and naming. | `active` |
+| T2 | done | active | Consumer renders only accepted fields. | `active` |
+| T3 | done | `ready-for-review` | Run API check and console tests together. | `active` |
+| T4 | done | done | Record producer and consumer receipts. | `idle` if no more work |
+
+If the consumer invents fields, root sends it back to the producer contract instead of merging local assumptions.
+
+### Example 10: Dependency Upgrade And Compatibility Repair
+
+Initial plan:
+
+```bash
+async-dispatch runtime plan-code <ledgerId> --objective "Upgrade parser dependency and capture failing compatibility checks" --route subagent-worktree --worktree "../dispatch-upgrade" --ownership "package.json pnpm-lock.yaml" --verify "pnpm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Repair parser compatibility after accepted upgrade" --route subagent-worktree --worktree "../dispatch-compat" --ownership "src/draft-template.js test/goal-first.test.js" --verify "pnpm test"
+```
+
+Status timeline:
+
+| Time | Upgrade lane | Repair lane | Root action | Scheduler |
+| --- | --- | --- | --- | --- |
+| T0 | active | `blocked`: waiting for upgrade result | Upgrade lane isolates dependency and lockfile effects. | `active` |
+| T1 | `ready-for-review`: failures captured | blocked | Root decides whether to accept the upgrade. | `active` or `paused-human` |
+| T2 | done | active | Repair lane fixes accepted compatibility failures only. | `active` |
+| T3 | done | `ready-for-review` | Run full tests and inspect lockfile/source diff together. | `active` |
+| T4 | done | done | Record receipts. | `idle` if no more work |
+
+If the upgrade creates unrelated failures, root splits or rejects it before repair expands.
+
 ## Stop Conditions
 
 Stop or re-route when:
@@ -239,6 +416,10 @@ Stop or re-route when:
 - a lane needs files outside ownership;
 - two lanes need the same files;
 - a test failure shows the contract is wrong;
+- a repro lane cannot reproduce the bug it is supposed to guard;
+- a migration lane lacks a rollback, dry-run, or compatibility check;
+- a feature flag lane cannot prove the off path still works;
+- an observability lane cannot show the agreed signal;
 - a worker repeatedly fails verification;
 - a child edits outside its boundary;
 - root must make a release, merge, architecture, or completion decision.

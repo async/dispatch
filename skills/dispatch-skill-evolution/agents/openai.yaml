@@ -1,4 +1,4 @@
 interface:
   display_name: "Dispatch Skill Evolution"
-  short_description: "Promote Dispatch repo skills safely"
-  default_prompt: "Use $dispatch-skill-evolution to evolve repo-local Dispatch skills before updating installed skills."
+  short_description: "Promote bundled Dispatch skills safely"
+  default_prompt: "Use $dispatch-skill-evolution to evolve bundled Dispatch skills before publishing or installing updates."
