@@ -4,11 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { checkClaims } from "../../claims/dist/index.js";
-import { claimsWorkflowTasks } from "../../claims/dist/pipeline.js";
-import { parsePackageContractManifest, renderApiSurfaceMarkdown } from "../../api-contract/dist/index.js";
-import { definePipeline, job, readDeclaration, sh, task, tasksForJob } from "../../pipeline/packages/pipeline-core/dist/index.js";
-import { runJob } from "../../pipeline/packages/pipeline-node/dist/runner.js";
+import { parsePackageContractManifest, renderApiSurfaceMarkdown } from "@async/api-contract";
+import { checkClaims } from "@async/claims";
+import { claimsWorkflowTasks } from "@async/claims/pipeline";
+import { definePipeline, job, readDeclaration, runJob, sh, task, tasksForJob } from "@async/pipeline";
 import {
   addNode,
   addNodeReceipt,
@@ -124,7 +123,7 @@ test("claims workflow helper flattens into the Dispatch verification graph", () 
     name: "dispatch-helper-graph",
     tasks: {
       "runtime.test": task({ run: sh`pnpm test` }),
-      "api.check": task({ run: sh`node ../api-contract/dist/cli.js check --manifest api-contract.json` }),
+      "api.check": task({ run: sh`api-contract check --manifest api-contract.json` }),
       claims,
       "release.gate": task({
         dependsOn: ["runtime.test", "api.check", "claims"],

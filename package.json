@@ -1,6 +1,6 @@
 {
   "name": "@async/dispatch",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Installable CLI and bundled Codex skills for coordinating async chats, plans, workers, and receipts.",
   "license": "MIT",
   "type": "module",
