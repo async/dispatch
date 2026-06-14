@@ -92,3 +92,9 @@ jobs:
 
       - name: Publish to npm
         run: npm publish --access public --provenance --registry=https://registry.npmjs.org
+
+      - name: Ensure public npm access
+        run: npm access public @async/dispatch --registry=https://registry.npmjs.org
+
+      - name: Verify npm visibility
+        run: npm view @async/dispatch@$npm_package_version version bin dist.tarball --json --registry=https://registry.npmjs.org

@@ -1,6 +1,6 @@
 {
   "name": "@async/dispatch",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Installable CLI and bundled Codex skills for coordinating async chats, plans, workers, and receipts.",
   "license": "MIT",
   "type": "module",
@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/async/dispatch#readme",
   "bin": {
-    "async-dispatch": "./src/cli.js"
+    "async-dispatch": "src/cli.js"
   },
   "exports": {
     "./package.json": "./package.json"
@@ -36,7 +36,7 @@
     "claims:check": "async-claims check --registry test/claims.json --test-files test/**/*.test.js",
     "api:surface": "api-contract ledger --manifest api-contract.json --out API_SURFACE.md",
     "api:check": "api-contract check --manifest api-contract.json && api-contract ledger --manifest api-contract.json --check API_SURFACE.md",
-    "pack:check": "npm pack --dry-run --registry=https://registry.npmjs.org",
+    "pack:check": "npm publish --dry-run --access public --registry=https://registry.npmjs.org",
     "pipeline:verify": "async-pipeline run verify --force",
     "release:check": "pnpm run pipeline:verify",
     "console": "node src/cli.js console"
