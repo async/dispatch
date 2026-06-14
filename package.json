@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/async/dispatch#readme",
   "bin": {
-    "async-dispatch": "src/cli.js"
+    "async-dispatch": "dist/cli.js"
   },
   "exports": {
     "./package.json": "./package.json"
@@ -23,24 +23,52 @@
     "API_SURFACE.md",
     "README.md",
     "api-contract.json",
-    "skills",
-    "src",
-    "templates"
+    "dist"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "test": "node --test",
-    "skills:check": "node src/cli.js skills check",
-    "claims:check": "async-claims check --registry test/claims.json --test-files test/**/*.test.js",
-    "api:surface": "api-contract ledger --manifest api-contract.json --out API_SURFACE.md",
-    "api:check": "api-contract check --manifest api-contract.json && api-contract ledger --manifest api-contract.json --check API_SURFACE.md",
-    "pack:check": "npm publish --dry-run --access public --registry=https://registry.npmjs.org",
-    "pipeline:verify": "async-pipeline run verify --force",
-    "pipeline:publish": "async-pipeline run publish --force",
-    "release:check": "pnpm run pipeline:verify",
-    "console": "node src/cli.js console"
+    "console": "node src/cli.js console",
+    "pipeline:api:check": "async-pipeline run-task api.check",
+    "pipeline:api:surface": "async-pipeline run-task api.surface",
+    "pipeline:github:check": "async-pipeline github check",
+    "pipeline:github:generate": "async-pipeline github generate",
+    "pipeline:pack:check": "async-pipeline run-task pack.check",
+    "pipeline:pages": "async-pipeline run pages",
+    "pipeline:preview": "async-pipeline run preview",
+    "pipeline:publish": "async-pipeline run publish",
+    "pipeline:publish:github:main": "async-pipeline publish github main --package .",
+    "pipeline:publish:github:pr": "async-pipeline publish github pr --package .",
+    "pipeline:publish:github:release": "async-pipeline publish github release --package .",
+    "pipeline:publish:npm": "async-pipeline publish npm --package .",
+    "pipeline:release-doctor": "async-pipeline run release-doctor",
+    "pipeline:release:doctor": "async-pipeline release doctor --package .",
+    "pipeline:release:ensure": "async-pipeline release ensure --package .",
+    "pipeline:skills:check": "async-pipeline run-task skills.check",
+    "pipeline:snapshot": "async-pipeline run snapshot",
+    "pipeline:sync:check": "async-pipeline sync check",
+    "pipeline:sync:generate": "async-pipeline sync generate",
+    "pipeline:task:api.check": "async-pipeline run-task api.check",
+    "pipeline:task:api.surface": "async-pipeline run-task api.surface",
+    "pipeline:task:build": "async-pipeline run-task build",
+    "pipeline:task:claims": "async-pipeline run-task claims",
+    "pipeline:task:claims.report": "async-pipeline run-task claims.report",
+    "pipeline:task:docs.site": "async-pipeline run-task docs.site",
+    "pipeline:task:github.check": "async-pipeline run-task github.check",
+    "pipeline:task:pack.check": "async-pipeline run-task pack.check",
+    "pipeline:task:publish.preview": "async-pipeline run-task publish.preview",
+    "pipeline:task:publish.snapshot": "async-pipeline run-task publish.snapshot",
+    "pipeline:task:publish.stable": "async-pipeline run-task publish.stable",
+    "pipeline:task:publish.stable.github": "async-pipeline run-task publish.stable.github",
+    "pipeline:task:release.doctor": "async-pipeline run-task release.doctor",
+    "pipeline:task:release.ensure": "async-pipeline run-task release.ensure",
+    "pipeline:task:skills.check": "async-pipeline run-task skills.check",
+    "pipeline:task:sync.check": "async-pipeline run-task sync.check",
+    "pipeline:task:test": "async-pipeline run-task test",
+    "pipeline:task:verify": "async-pipeline run-task verify",
+    "pipeline:verify": "async-pipeline run verify",
+    "pipeline:verify:force": "async-pipeline run verify --force"
   },
   "engines": {
     "node": ">=24"
