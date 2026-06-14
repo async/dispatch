@@ -97,4 +97,13 @@ jobs:
         run: npm access set status=public @async/dispatch --registry=https://registry.npmjs.org
 
       - name: Verify npm visibility
-        run: npm view @async/dispatch@$npm_package_version version bin dist.tarball --json --registry=https://registry.npmjs.org
+        run: |
+          version="$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")"
+          for attempt in 1 2 3 4 5 6; do
+            if npm view "@async/dispatch@$version" version bin dist.tarball --json --registry=https://registry.npmjs.org; then
+              exit 0
+            fi
+            echo "npm visibility check failed for @async/dispatch@$version on attempt $attempt; waiting for propagation"
+            sleep 10
+          done
+          exit 1

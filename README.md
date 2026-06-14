@@ -14,9 +14,10 @@ runtime state in prompts.
 
 ## Install
 
-Dispatch is an installable CLI with bundled Codex skills. Install the CLI first,
-then install the skills that teach Codex how to use the CLI for async root chats,
-domain chats, workers, receipts, idle/wake handling, and code-routing decisions.
+Dispatch is distributed as the public npm package `@async/dispatch`. Install the
+CLI first, then install the bundled skills that teach Codex how to use that CLI
+for async root chats, domain chats, workers, receipts, idle/wake handling, and
+code-routing decisions. A normal user should not need a source checkout.
 
 Requirements:
 
@@ -63,6 +64,10 @@ Install the bundled Codex skills:
 async-dispatch skills install
 async-dispatch skills status
 ```
+
+After this, start a fresh Codex session so the newly installed Dispatch skills
+are discoverable. The installed skills call `async-dispatch`; they should not
+duplicate runtime state in prompts or local skill files.
 
 By default that writes to `~/.codex/skills`. Installed Dispatch-managed skills
 include metadata with the package version and source hash so `skills status` can
