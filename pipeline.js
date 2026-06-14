@@ -119,9 +119,9 @@ export default definePipeline({
       ]
     }),
     "docs.site": task({
-      description: "Build the README-backed GitHub Pages site.",
-      inputs: ["README.md", "scripts/build-pages.js"],
-      outputs: [".async/pages/index.html"],
+      description: "Build the standardized GitHub Pages documentation site.",
+      inputs: ["README.md", "templates/**/*.md", "scripts/build-pages.js"],
+      outputs: [".async/pages/**"],
       cache: true,
       // TODO(@async/pipeline): replace this fallback when pipeline provides a first-class README-to-Pages builder.
       run: sh`node scripts/build-pages.js`
