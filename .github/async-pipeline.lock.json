@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "generator": "@async/pipeline",
+  "config": "pipeline.js",
+  "workflow": ".github/workflows/async-pipeline.yml",
+  "hash": "sha256:986f6f683c16cf04595b3e6c4972d4e34a50ea4ad2a8943f6853aac0bf8322db",
+  "generatedAt": "2026-06-14T17:22:31.770Z",
+  "triggers": {
+    "push": {
+      "branches": [
+        "main"
+      ]
+    },
+    "release": {},
+    "workflow_dispatch": {}
+  },
+  "jobs": [
+    {
+      "id": "publish",
+      "target": [
+        "publish.npm"
+      ],
+      "trigger": [
+        "release",
+        "manual"
+      ],
+      "env": {
+        "NODE_AUTH_TOKEN": {
+          "kind": "async-pipeline.env.secret",
+          "name": "NPM_TOKEN"
+        }
+      },
+      "environment": {
+        "name": "npm-publish",
+        "url": "https://www.npmjs.com/package/@async/dispatch"
+      },
+      "requires": {
+        "provenance": true
+      },
+      "if": "(github.event_name == 'release') || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'publish')"
+    },
+    {
+      "id": "verify",
+      "target": [
+        "test",
+        "skills.check",
+        "api.check",
+        "claims",
+        "github.check",
+        "pack.check"
+      ],
+      "trigger": [
+        "main",
+        "manual"
+      ],
+      "env": {},
+      "if": "(github.event_name == 'push' && (github.ref == 'refs/heads/main')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'verify')"
+    }
+  ],
+  "packageManager": "pnpm",
+  "nodeVersion": "24",
+  "taskCache": true,
+  "manualDispatchJobs": [
+    "publish",
+    "verify"
+  ]
+}
