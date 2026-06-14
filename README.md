@@ -149,6 +149,10 @@ pnpm test
 `pipeline:verify` creates ignored `.async/` run and cache artifacts. Runtime
 ledger state does not live there; it defaults to `~/.async/dispatch`.
 
+Patch releases are published by GitHub Actions through the Dispatch pipeline:
+the release workflow calls `pnpm run pipeline:publish`, and the pipeline job
+delegates npm publication to `async-pipeline publish npm --package .`.
+
 ## Quick Start
 
 Use a temporary home for demos so you do not touch your real Dispatch ledger:

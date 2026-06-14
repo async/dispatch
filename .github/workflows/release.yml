@@ -69,9 +69,7 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
-
-      - name: Use current npm
-        run: npm install -g npm@11.16.0
+          registry-url: https://registry.npmjs.org
 
       - name: Enable pnpm
         run: |
@@ -81,29 +79,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run release check
-        run: pnpm run release:check
+      - name: Run pipeline publish
+        run: pnpm run pipeline:publish
         env:
           CI: true
-
-      - name: Configure npm token
-        if: env.NODE_AUTH_TOKEN != ''
-        run: npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
-
-      - name: Publish to npm
-        run: npm publish --access public --provenance --registry=https://registry.npmjs.org
-
-      - name: Ensure public npm access
-        run: npm access set status=public @async/dispatch --registry=https://registry.npmjs.org
-
-      - name: Verify npm visibility
-        run: |
-          version="$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")"
-          for attempt in 1 2 3 4 5 6; do
-            if npm view "@async/dispatch@$version" version bin dist.tarball --json --registry=https://registry.npmjs.org; then
-              exit 0
-            fi
-            echo "npm visibility check failed for @async/dispatch@$version on attempt $attempt; waiting for propagation"
-            sleep 10
-          done
-          exit 1

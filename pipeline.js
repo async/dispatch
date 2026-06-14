@@ -46,11 +46,19 @@ export default definePipeline({
       dependsOn: ["test", "skills.check", "api.check", "claims"],
       inputs: ["package.json", "README.md", "API_SURFACE.md", "api-contract.json", "src/**/*.js", "skills/**/*", "templates/**/*"],
       cache: false,
-      run: sh`npm pack --dry-run --registry=https://registry.npmjs.org`
+      run: sh`npm publish --dry-run --access public --registry=https://registry.npmjs.org`
+    }),
+    "publish.npm": task({
+      description: "Publish the public package to npm through @async/pipeline lifecycle publishing.",
+      dependsOn: ["pack.check"],
+      inputs: ["package.json", "README.md", "API_SURFACE.md", "api-contract.json", "src/**/*.js", "skills/**/*", "templates/**/*", ".github/workflows/release.yml"],
+      cache: false,
+      run: sh`async-pipeline publish npm --package .`
     }),
     claims
   },
   jobs: {
-    verify: job({ target: ["test", "skills.check", "api.check", "claims", "pack.check"] })
+    verify: job({ target: ["test", "skills.check", "api.check", "claims", "pack.check"] }),
+    publish: job({ target: "publish.npm" })
   }
 });
