@@ -11,6 +11,90 @@ Goal Seed -> Context Discovery -> Refined Goal Charter -> Human Draft -> Review 
 The CLI owns IDs, storage, validation, plan compilation, and the local console.
 Skills can stay thin and call into Dispatch after this proves itself.
 
+## Install
+
+Dispatch is source-first right now. The CLI itself has no runtime package
+dependencies, but full verification dogfoods adjacent Async helper packages.
+
+Requirements:
+
+- Node.js 24 or newer
+- pnpm 10.20 or newer
+- Optional for full verification: sibling checkouts of `pipeline`, `claims`,
+  and `api-contract` beside this repo
+
+Minimal CLI setup:
+
+```bash
+git clone <dispatch-repo-url> dispatch
+cd dispatch
+corepack enable
+pnpm install
+node src/cli.js help
+```
+
+Install the `async-dispatch` command from a checkout:
+
+```bash
+pnpm link --global
+async-dispatch help
+```
+
+If global linking is not configured on your machine, use the direct command
+form instead:
+
+```bash
+node src/cli.js <command>
+```
+
+Full local development setup expects this layout:
+
+```text
+async/
+  api-contract/
+  claims/
+  dispatch/
+  pipeline/
+```
+
+Build or verify the helper repos first if their `dist/` folders are missing,
+then run Dispatch verification:
+
+```bash
+cd dispatch
+pnpm run pipeline:verify
+```
+
+`pipeline:verify` creates ignored `.async/` run and cache artifacts. Runtime
+ledger state does not live there; it defaults to `~/.async/dispatch`.
+
+## Quick Start
+
+Use a temporary home for demos so you do not touch your real Dispatch ledger:
+
+```bash
+export ASYNC_DISPATCH_HOME="$(mktemp -d)"
+```
+
+Create and start a small runtime:
+
+```bash
+GOAL=$(async-dispatch goal init --seed "Coordinate a local release" | awk '/goalId:/ {print $2}')
+PLAN=$(async-dispatch plan draft "$GOAL" | awk '/planId:/ {print $2}')
+async-dispatch plan ready "$PLAN" --note "ready"
+BOARD=$(async-dispatch plan compile "$PLAN" | awk '/boardId:/ {print $2}')
+async-dispatch board approve "$BOARD" --note "approved"
+LEDGER=$(async-dispatch runtime start "$BOARD" | awk '/ledgerId:/ {print $2}')
+async-dispatch node add "$LEDGER" --kind phase --title "Discovery"
+async-dispatch node tree "$LEDGER"
+```
+
+Open the local console:
+
+```bash
+async-dispatch console --port 8787
+```
+
 ## Conceptual Model
 
 Dispatch is a small local state-machine and queue runtime for Codex work.
@@ -123,6 +207,99 @@ For tests or demos, set:
 ```bash
 ASYNC_DISPATCH_HOME=/tmp/async-dispatch-demo
 ```
+
+Use persistent storage for real work and a temporary `ASYNC_DISPATCH_HOME` for
+tests, demos, and README smoke runs. Do not put runtime ledger state in the repo.
+
+`.async/` is reserved for Async Pipeline run/cache artifacts. `.async-dispatch/`
+is only an ignored legacy/reserved local scratch name; current Dispatch runtime
+state is `~/.async/dispatch` unless `ASYNC_DISPATCH_HOME` is set.
+
+## Codex Setup
+
+When Codex uses this repo, bootstrap from the actual checkout and make the
+runtime state explicit before doing work.
+
+Checklist for a new Codex thread:
+
+1. Confirm the checkout and package manager:
+
+   ```bash
+   pwd
+   pnpm --version
+   node src/cli.js help
+   ```
+
+2. Choose storage:
+   - Real ongoing work: leave `ASYNC_DISPATCH_HOME` unset so state goes to
+     `~/.async/dispatch`.
+   - Demo or test work: set `ASYNC_DISPATCH_HOME="$(mktemp -d)"`.
+
+3. Prefer the linked CLI when available:
+
+   ```bash
+   async-dispatch snapshot
+   ```
+
+   If it is not linked, use:
+
+   ```bash
+   node src/cli.js snapshot
+   ```
+
+4. For a new user goal, move through the hard boundaries:
+   - `goal init`
+   - `context add` for discovered facts
+   - `plan draft` or `plan template human-draft`
+   - review loop with `plan decision`, `plan enrich`, and `plan resolve`
+   - `plan ready`
+   - `plan compile`
+   - `board approve`
+   - `runtime start`
+
+5. Once a runtime exists, treat the ledger as source of truth:
+   - Use `node add`, `node gate`, `node tree`, and `node show` for recursive
+     phases, loops, checkpoints, tasks, lanes, gates, and lessons.
+   - Before writing code, record routing with `runtime plan-code`.
+   - Keep worker/domain state current with `worker status`, `worker task`,
+     receipts, and `worker close-domain`.
+   - Use `runtime wait` only for a real timer or external event.
+   - Use `runtime human-response` only for a known blocker that was waiting on
+     a specific human answer.
+   - Use `runtime wake` when the runtime is idle and the human says something
+     new.
+
+6. Before claiming the repo is healthy, run the strongest available local gate:
+
+   ```bash
+   pnpm run pipeline:verify
+   ```
+
+   If the helper repos are not present, run the narrow smoke path instead:
+
+   ```bash
+   node src/cli.js help
+   node src/cli.js snapshot
+   ```
+
+Codex should not invent sleeps or private scratch state. If there is runnable
+work, dispatch it. If the only valid action is a timer or external event, record
+an external wait. If nothing is actionable, let the scheduler become `idle` and
+wait for `runtime wake`.
+
+## Repo-Local Skills
+
+The `skills/` directory contains Dispatch-native skill drafts:
+
+- `dispatch-root-runtime`: goal, draft, board, runtime, worker, receipt, idle,
+  and wake coordination.
+- `dispatch-code-routing`: quick code-routing decisions before edits, including
+  root work, scouts, worktrees, child chats, and domain-owner chats.
+- `dispatch-skill-evolution`: evolving these repo-local skills before promoting
+  them into installed Codex skills.
+
+These skills should stay thin. They should tell Codex when to call
+`async-dispatch`; they should not duplicate ledger state in long prompts.
 
 ## Commands
 
@@ -275,8 +452,8 @@ Tests and implementation are a good parallel case when their ownership is clean.
 Record a test lane and a code lane separately:
 
 ```bash
-async-dispatch runtime plan-code <ledgerId> --objective "Add failing tests for scheduler idle/wake" --route subagent-worktree --worktree "../dispatch-tests" --ownership "test/goal-first.test.js" --verify "npm test"
-async-dispatch runtime plan-code <ledgerId> --objective "Implement scheduler idle/wake support" --route subagent-worktree --worktree "../dispatch-code" --ownership "src/model.js src/cli.js src/console-server.js" --verify "npm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Add failing tests for scheduler idle/wake" --route subagent-worktree --worktree "../dispatch-tests" --ownership "test/goal-first.test.js" --verify "pnpm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Implement scheduler idle/wake support" --route subagent-worktree --worktree "../dispatch-code" --ownership "src/model.js src/cli.js src/console-server.js" --verify "pnpm test"
 ```
 
 When the test lane has a runnable red test, root can run it against the code
@@ -315,5 +492,8 @@ the root to process.
 ## Development
 
 ```bash
-npm test
+pnpm test
+pnpm run claims:check
+pnpm run api:check
+pnpm run pipeline:verify
 ```
