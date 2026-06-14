@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -12,7 +13,10 @@ export function dispatchPackageRoot() {
 }
 
 export function bundledSkillsDir() {
-  return path.join(dispatchPackageRoot(), "skills");
+  const packageRoot = dispatchPackageRoot();
+  const sourceSkills = path.join(packageRoot, "skills");
+  if (existsSync(sourceSkills)) return sourceSkills;
+  return path.join(packageRoot, "dist", "skills");
 }
 
 export function defaultCodexSkillsDir() {

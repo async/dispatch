@@ -30,13 +30,6 @@ pnpm add --global @async/dispatch
 async-dispatch help
 ```
 
-The same package also works with npm directly:
-
-```bash
-npm install --global @async/dispatch
-async-dispatch help
-```
-
 Use `corepack` only if you want pnpm to manage global installs on a fresh
 machine:
 
@@ -125,15 +118,15 @@ then run Dispatch verification:
 ```bash
 cd ../pipeline
 pnpm install
-pnpm run build
+pnpm run pipeline:task:build
 
 cd ../api-contract
 pnpm install
-pnpm run build
+pnpm run pipeline:task:build
 
 cd ../claims
 pnpm install
-pnpm run build
+pnpm run pipeline:task:build
 
 cd ../dispatch
 pnpm run pipeline:verify
@@ -143,17 +136,17 @@ If you only need the Dispatch CLI and do not have the helper repos yet, use the
 standalone gate:
 
 ```bash
-pnpm test
+pnpm run pipeline:task:test
 ```
 
-`pipeline:verify` creates ignored `.async/` run and cache artifacts. Runtime
-ledger state does not live there; it defaults to `~/.async/dispatch`.
+`pnpm run pipeline:verify` creates ignored `.async/` run and cache artifacts.
+Runtime ledger state does not live there; it defaults to `~/.async/dispatch`.
 
-GitHub Actions is generated from `pipeline.js` with `async-pipeline github
-generate`. The committed workflow checks its generated lock, then runs
-`async-pipeline run verify` on pushes to `main` and `async-pipeline run publish`
-for releases. The publish job delegates npm publication to
-`async-pipeline publish npm --package .`.
+GitHub Actions and package scripts are generated from `pipeline.js` with
+`pnpm run pipeline:sync:generate`. The committed workflow checks generated
+state, verifies pull requests, publishes PR previews and main snapshots to
+GitHub Packages, deploys GitHub Pages from `main`, and publishes stable releases
+through `@async/pipeline`.
 
 ## Quick Start
 
@@ -414,7 +407,7 @@ During Dispatch development, edit bundled skills in `skills/<skill-name>/`, then
 validate the source copy:
 
 ```bash
-pnpm run skills:check
+pnpm run pipeline:task:skills.check
 ```
 
 After validation, install them for local Codex use:
@@ -451,7 +444,7 @@ async-dispatch worker status <ledgerId> --worker-id W001 --state blocked --block
 async-dispatch runtime human-response <ledgerId> --note "Owner approved option A"
 async-dispatch worker status <ledgerId> --worker-id W001 --state idle
 async-dispatch runtime wake <ledgerId> --note "Human asked for the next dispatch"
-async-dispatch runtime plan-code <ledgerId> --objective "Patch release scheduler" --route domain-owner-chat --domain pipeline --ownership "packages/pipeline/src" --verify "pnpm release:check"
+async-dispatch runtime plan-code <ledgerId> --objective "Patch release scheduler" --route domain-owner-chat --domain pipeline --ownership "packages/pipeline/src" --verify "pnpm run pipeline:verify"
 async-dispatch runtime wait <ledgerId> --next-check-at "2026-06-14T18:00:00.000Z" --reason "Wait for npm propagation"
 async-dispatch runtime clear-wait <ledgerId> --wait-id EW001 --note "Propagation checked"
 async-dispatch node add <ledgerId> --kind phase --title "Discovery" --objective "Map the repo before implementation"
@@ -559,7 +552,7 @@ runtime can record that decision so the root does not accidentally do broad work
 that belongs in a bounded worker, worktree, or long-lived domain chat.
 
 ```bash
-async-dispatch runtime plan-code <ledgerId> --objective "Patch release scheduler" --route domain-owner-chat --domain pipeline --ownership "packages/pipeline/src" --verify "pnpm release:check"
+async-dispatch runtime plan-code <ledgerId> --objective "Patch release scheduler" --route domain-owner-chat --domain pipeline --ownership "packages/pipeline/src" --verify "pnpm run pipeline:verify"
 ```
 
 Supported routes:
@@ -583,8 +576,8 @@ Tests and implementation are a good parallel case when their ownership is clean.
 Record a test lane and a code lane separately:
 
 ```bash
-async-dispatch runtime plan-code <ledgerId> --objective "Add failing tests for scheduler idle/wake" --route subagent-worktree --worktree "../dispatch-tests" --ownership "test/goal-first.test.js" --verify "pnpm test"
-async-dispatch runtime plan-code <ledgerId> --objective "Implement scheduler idle/wake support" --route subagent-worktree --worktree "../dispatch-code" --ownership "src/model.js src/cli.js src/console-server.js" --verify "pnpm test"
+async-dispatch runtime plan-code <ledgerId> --objective "Add failing tests for scheduler idle/wake" --route subagent-worktree --worktree "../dispatch-tests" --ownership "test/goal-first.test.js" --verify "pnpm run pipeline:task:test"
+async-dispatch runtime plan-code <ledgerId> --objective "Implement scheduler idle/wake support" --route subagent-worktree --worktree "../dispatch-code" --ownership "src/model.js src/cli.js src/console-server.js" --verify "pnpm run pipeline:task:test"
 ```
 
 When the test lane has a runnable red test, root can run it against the code
@@ -623,8 +616,8 @@ the root to process.
 ## Development
 
 ```bash
-pnpm test
-pnpm run claims:check
-pnpm run api:check
+pnpm run pipeline:task:test
+pnpm run pipeline:task:claims
+pnpm run pipeline:task:api.check
 pnpm run pipeline:verify
 ```
