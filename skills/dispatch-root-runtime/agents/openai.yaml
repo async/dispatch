@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dispatch Root Runtime"
+  short_description: "Run Dispatch root chats from plan to idle"
+  default_prompt: "Use $dispatch-root-runtime to coordinate this goal through Dispatch runtime."

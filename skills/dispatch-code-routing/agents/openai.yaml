@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dispatch Code Routing"
+  short_description: "Route code work before editing"
+  default_prompt: "Use $dispatch-code-routing to decide whether this code work belongs in root, a subagent, a worktree, or a domain chat."

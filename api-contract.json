@@ -1,0 +1,191 @@
+{
+  "format": "api-contract.package.v1",
+  "packageName": "@async/dispatch",
+  "catalogs": [
+    {
+      "format": "api-contract.catalog.v1",
+      "contractId": "@async/dispatch.runtime-scheduler",
+      "title": "Dispatch Runtime Scheduler",
+      "features": [
+        {
+          "id": "scheduler.idle",
+          "title": "Event-driven idle polling state",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "polling"
+        },
+        {
+          "id": "scheduler.paused-human",
+          "title": "Human-specific paused polling state",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "polling"
+        },
+        {
+          "id": "scheduler.waiting-external",
+          "title": "Timed external wait polling state",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "polling"
+        },
+        {
+          "id": "runtime.human-wake",
+          "title": "Human wake event for idle runtimes",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "events"
+        },
+        {
+          "id": "runtime.external-wait",
+          "title": "Explicit external wait records with resume metadata",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "events"
+        }
+      ]
+    },
+    {
+      "format": "api-contract.catalog.v1",
+      "contractId": "@async/dispatch.workflow-nodes",
+      "title": "Dispatch Recursive Workflow Nodes",
+      "features": [
+        {
+          "id": "node.overlay",
+          "title": "Workflow nodes as structure overlay linked to execution records",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "model"
+        },
+        {
+          "id": "node.containment",
+          "title": "V1 recursive node containment policy",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "model"
+        },
+        {
+          "id": "node.status-aggregation",
+          "title": "Parent status aggregation from child nodes",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "model"
+        },
+        {
+          "id": "node.direction-gate",
+          "title": "Human direction gate schema with bounded options",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "human"
+        },
+        {
+          "id": "node.human-blocker",
+          "title": "Context-rich human blocker schema",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "human"
+        },
+        {
+          "id": "node.receipt-ref",
+          "title": "Node receipt references backed by append-only receipt bodies",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "receipts"
+        }
+      ]
+    },
+    {
+      "format": "api-contract.catalog.v1",
+      "contractId": "@async/dispatch.cli",
+      "title": "Dispatch CLI",
+      "features": [
+        {
+          "id": "cli.runtime-wake",
+          "title": "runtime wake command",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "runtime"
+        },
+        {
+          "id": "cli.runtime-wait",
+          "title": "runtime wait command",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "runtime"
+        },
+        {
+          "id": "cli.runtime-plan-code",
+          "title": "runtime plan-code command with node linkage",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "runtime"
+        },
+        {
+          "id": "cli.node-tree",
+          "title": "node tree inspection command",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "nodes"
+        },
+        {
+          "id": "cli.node-show",
+          "title": "node show inspection command",
+          "releaseTag": "internal",
+          "stability": "preview",
+          "lifecycle": "active",
+          "group": "nodes"
+        }
+      ]
+    }
+  ],
+  "supported": [
+    {
+      "format": "api-contract.surface.v1",
+      "contractId": "@async/dispatch.runtime-scheduler",
+      "features": [
+        "scheduler.idle",
+        "scheduler.paused-human",
+        "scheduler.waiting-external",
+        "runtime.human-wake",
+        "runtime.external-wait"
+      ]
+    },
+    {
+      "format": "api-contract.surface.v1",
+      "contractId": "@async/dispatch.workflow-nodes",
+      "features": [
+        "node.overlay",
+        "node.containment",
+        "node.status-aggregation",
+        "node.direction-gate",
+        "node.human-blocker",
+        "node.receipt-ref"
+      ]
+    },
+    {
+      "format": "api-contract.surface.v1",
+      "contractId": "@async/dispatch.cli",
+      "features": [
+        "cli.runtime-wake",
+        "cli.runtime-wait",
+        "cli.runtime-plan-code",
+        "cli.node-tree",
+        "cli.node-show"
+      ]
+    }
+  ]
+}

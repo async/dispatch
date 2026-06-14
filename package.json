@@ -1,0 +1,23 @@
+{
+  "name": "@async/dispatch",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Goal-first local coordination kernel for Async root chats, plans, boards, workers, and receipts.",
+  "type": "module",
+  "packageManager": "pnpm@10.20.0",
+  "bin": {
+    "async-dispatch": "./src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "claims:check": "node ../claims/dist/cli.js check --registry test/claims.json --test-files test/**/*.test.js",
+    "api:surface": "node ../api-contract/dist/cli.js ledger --manifest api-contract.json --out API_SURFACE.md",
+    "api:check": "node ../api-contract/dist/cli.js check --manifest api-contract.json && node ../api-contract/dist/cli.js ledger --manifest api-contract.json --check API_SURFACE.md",
+    "pipeline:verify": "node ../pipeline/packages/pipeline/dist/cli.js run verify --force",
+    "release:check": "pnpm run pipeline:verify",
+    "console": "node src/cli.js console"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
