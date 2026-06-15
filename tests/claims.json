@@ -1,5 +1,5 @@
 {
-  "$comment": "Claim -> test map enforced by @async/claims. Every anchor must appear verbatim in its source file, every listed test title must exist in test/**/*.test.js, and every test titled 'PROMISE: ...' must be registered here.",
+  "$comment": "Claim -> test map enforced by @async/claims. Every anchor must appear verbatim in its source file, every listed test title must exist in tests/**/*.test.js, and every test titled 'PROMISE: ...' must be registered here.",
   "claims": [
     {
       "id": "readme.recursive-nodes-overlay",

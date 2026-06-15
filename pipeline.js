@@ -1,5 +1,5 @@
 import { definePipeline, env, job, sh, task, trigger } from "@async/pipeline";
-import { claimsWorkflowTasks } from "@async/claims/pipeline";
+import { claimsTasks } from "@async/claims/pipeline";
 
 const packageInputs = [
   "package.json",
@@ -11,8 +11,8 @@ const packageInputs = [
   "skills/**/references/**/*.md",
   "scripts/build-dist.js",
   "templates/**/*.md",
-  "test/**/*.test.js",
-  "test/claims.json",
+  "tests/**/*.test.js",
+  "tests/claims.json",
   "README.md",
   "api-contract.json",
   "API_SURFACE.md"
@@ -31,12 +31,9 @@ const pipelineInputs = [
   ".async-pipeline/tasks.lock.json"
 ];
 
-const claims = claimsWorkflowTasks({
-  task,
-  sh
-}, {
-  registry: "test/claims.json",
-  testFiles: ["test/**/*.test.js"],
+const claims = claimsTasks({
+  registry: "tests/claims.json",
+  testFiles: ["tests/**/*.test.js"],
   docs: ["README.md"],
   extraInputs: ["src/**/*.js", "pipeline.js", "api-contract.json", "API_SURFACE.md"],
   repair: false
@@ -91,7 +88,7 @@ export default definePipeline({
     test: task({
       description: "Run the local Dispatch node:test suite.",
       dependsOn: ["build"],
-      inputs: ["src/**/*.js", "test/**/*.test.js", "package.json"],
+      inputs: ["src/**/*.js", "tests/**/*.test.js", "package.json"],
       cache: false,
       run: sh`node --test`
     }),

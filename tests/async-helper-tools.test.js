@@ -6,7 +6,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { parsePackageContractManifest, renderApiSurfaceMarkdown } from "@async/api-contract";
 import { checkClaims } from "@async/claims";
-import { claimsWorkflowTasks } from "@async/claims/pipeline";
+import { claimsTasks } from "@async/claims/pipeline";
 import { definePipeline, job, readDeclaration, runJob, sh, task, tasksForJob } from "@async/pipeline";
 import {
   addNode,
@@ -113,9 +113,9 @@ test("PROMISE: async pipeline schedules test and code lanes in parallel", async 
 });
 
 test("claims workflow helper flattens into the Dispatch verification graph", () => {
-  const claims = claimsWorkflowTasks({ task, sh }, {
-    registry: "test/claims.json",
-    testFiles: ["test/**/*.test.js"],
+  const claims = claimsTasks({
+    registry: "tests/claims.json",
+    testFiles: ["tests/**/*.test.js"],
     docs: ["README.md"],
     repair: false
   });
@@ -147,8 +147,8 @@ test("claims workflow helper flattens into the Dispatch verification graph", () 
 test("async claims registry covers Dispatch README promises", async () => {
   const report = await checkClaims({
     cwd: repoRoot,
-    registry: "test/claims.json",
-    testFiles: ["test/**/*.test.js"]
+    registry: "tests/claims.json",
+    testFiles: ["tests/**/*.test.js"]
   });
 
   assert.equal(report.ok, true, JSON.stringify(report.failures, null, 2));

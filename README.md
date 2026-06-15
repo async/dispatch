@@ -576,7 +576,7 @@ Tests and implementation are a good parallel case when their ownership is clean.
 Record a test lane and a code lane separately:
 
 ```bash
-async-dispatch runtime plan-code <ledgerId> --objective "Add failing tests for scheduler idle/wake" --route subagent-worktree --worktree "../dispatch-tests" --ownership "test/goal-first.test.js" --verify "pnpm run pipeline:task:test"
+async-dispatch runtime plan-code <ledgerId> --objective "Add failing tests for scheduler idle/wake" --route subagent-worktree --worktree "../dispatch-tests" --ownership "tests/goal-first.test.js" --verify "pnpm run pipeline:task:test"
 async-dispatch runtime plan-code <ledgerId> --objective "Implement scheduler idle/wake support" --route subagent-worktree --worktree "../dispatch-code" --ownership "src/model.js src/cli.js src/console-server.js" --verify "pnpm run pipeline:task:test"
 ```
 
