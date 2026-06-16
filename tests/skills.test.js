@@ -16,20 +16,22 @@ import {
 const execFile = promisify(execFileCallback);
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const cliPath = path.join(repoRoot, "src", "cli.js");
+const bundledSkillNames = [
+  "dispatch-code-routing",
+  "dispatch-root-runtime",
+  "dispatch-skill-evolution",
+  "dispatch-start"
+];
 
 test("bundled skills are listed and validated for CLI installation", async () => {
   const skills = await listBundledSkills();
   const names = skills.map((skill) => skill.name);
   const validation = await validateBundledSkills();
 
-  assert.deepEqual(names, [
-    "dispatch-code-routing",
-    "dispatch-root-runtime",
-    "dispatch-skill-evolution"
-  ]);
+  assert.deepEqual(names, bundledSkillNames);
   assert.ok(skills.every((skill) => skill.description.includes("Dispatch") || skill.description.includes("async-dispatch")));
   assert.equal(validation.ok, true);
-  assert.equal(validation.skills.length, 3);
+  assert.equal(validation.skills.length, 4);
 });
 
 test("bundled skill names must match safe folder basenames", async () => {
@@ -49,7 +51,7 @@ test("skill installer records metadata, status, and preserves unmanaged folders"
   const targetDir = await fs.mkdtemp(path.join(os.tmpdir(), "dispatch-skills-"));
   try {
     const initial = await installBundledSkills({ targetDir });
-    assert.equal(initial.results.length, 3);
+    assert.equal(initial.results.length, 4);
     assert.ok(initial.results.every((result) => result.action === "installed"));
 
     const current = await getSkillInstallStatus({ targetDir, skills: "dispatch-root-runtime" });
@@ -109,11 +111,7 @@ test("skills CLI supports JSON list, status, install, and unknown skill errors",
   const targetDir = await fs.mkdtemp(path.join(os.tmpdir(), "dispatch-skills-cli-"));
   try {
     const listed = JSON.parse((await execCli(["skills", "list", "--json"])).stdout);
-    assert.deepEqual(listed.skills.map((skill) => skill.name), [
-      "dispatch-code-routing",
-      "dispatch-root-runtime",
-      "dispatch-skill-evolution"
-    ]);
+    assert.deepEqual(listed.skills.map((skill) => skill.name), bundledSkillNames);
 
     const install = JSON.parse((await execCli([
       "skills",
@@ -135,7 +133,7 @@ test("skills CLI supports JSON list, status, install, and unknown skill errors",
       targetDir,
       "--json"
     ])).stdout);
-    assert.deepEqual(status.results.map((result) => result.status), ["current", "current", "missing"]);
+    assert.deepEqual(status.results.map((result) => result.status), ["current", "current", "missing", "missing"]);
 
     await assert.rejects(
       () => execCli(["skills", "install", "--target", targetDir, "--skill", "../escape"]),
@@ -149,6 +147,9 @@ test("skills CLI supports JSON list, status, install, and unknown skill errors",
 test("packed package exposes the async-dispatch CLI and bundled skills", async () => {
   const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "dispatch-pack-"));
   try {
+    await execFile(process.execPath, [path.join(repoRoot, "scripts", "build-dist.js")], {
+      cwd: repoRoot
+    });
     const pack = JSON.parse((await execFile("pnpm", ["pack", "--json", "--pack-destination", tmp], {
       cwd: repoRoot
     })).stdout);
@@ -158,6 +159,7 @@ test("packed package exposes the async-dispatch CLI and bundled skills", async (
     const bin = path.join(installDir, "node_modules", ".bin", "async-dispatch");
     const listed = await execFile(bin, ["skills", "list"]);
     assert.match(listed.stdout, /dispatch-root-runtime/);
+    assert.match(listed.stdout, /dispatch-start/);
 
     const targetDir = path.join(tmp, "codex-skills");
     const installed = await execFile(bin, ["skills", "install", "--target", targetDir, "--skill", "dispatch-root-runtime"]);

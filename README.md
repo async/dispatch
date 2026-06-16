@@ -339,6 +339,8 @@ Checklist for a new Codex thread:
    ```
 
 5. In a fresh Codex session, use the installed skills when their triggers match:
+   - `$dispatch-start` as the first skill for broad goals, async requests,
+     multi-repo work, or "spawn chats" requests.
    - `$dispatch-root-runtime` for broad root-chat coordination.
    - `$dispatch-code-routing` before code edits that might split into lanes,
      worktrees, child chats, or domain-owner chats.
@@ -393,6 +395,8 @@ The `skills/` directory is part of the package. These skills ship with
 `@async/dispatch` and are installed into Codex with
 `async-dispatch skills install`.
 
+- `dispatch-start`: entrypoint routing for raw goals; starts planning when
+  broad async work has no approved board yet.
 - `dispatch-root-runtime`: goal, draft, board, runtime, worker, receipt, idle,
   and wake coordination.
 - `dispatch-code-routing`: quick code-routing decisions before edits, including

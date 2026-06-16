@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dispatch Start"
+  short_description: "Start Dispatch planning and runtime"
+  default_prompt: "Use $dispatch-start to start this goal through Dispatch planning and runtime."
