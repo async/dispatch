@@ -1,0 +1,23 @@
+{
+  "$comment": "Claim -> test coverage enforced by @async/claims.",
+  "coverage": [
+    {
+      "claimId": "readme.recursive-nodes-overlay",
+      "tests": [
+        "PROMISE: recursive nodes stay an execution overlay linked by ids"
+      ]
+    },
+    {
+      "claimId": "readme.event-driven-idle",
+      "tests": [
+        "PROMISE: idle scheduler stops polling until human wake"
+      ]
+    },
+    {
+      "claimId": "readme.parallel-test-code-lanes",
+      "tests": [
+        "PROMISE: async pipeline schedules test and code lanes in parallel"
+      ]
+    }
+  ]
+}

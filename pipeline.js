@@ -13,7 +13,9 @@ const packageInputs = [
   "templates/**/*.md",
   "tests/**/*.test.js",
   "tests/claims.json",
+  "tests/claims.coverage.json",
   "README.md",
+  "CHANGELOG.md",
   "api-contract.json",
   "API_SURFACE.md"
 ];

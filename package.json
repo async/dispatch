@@ -21,6 +21,7 @@
   },
   "files": [
     "API_SURFACE.md",
+    "CHANGELOG.md",
     "README.md",
     "api-contract.json",
     "dist"
@@ -68,7 +69,8 @@
     "pipeline:task:test": "async-pipeline run-task test",
     "pipeline:task:verify": "async-pipeline run-task verify",
     "pipeline:verify": "async-pipeline run verify",
-    "pipeline:verify:force": "async-pipeline run verify --force"
+    "pipeline:verify:force": "async-pipeline run verify --force",
+    "release:check": "pnpm run pipeline:verify:force"
   },
   "engines": {
     "node": ">=24"
@@ -76,6 +78,6 @@
   "devDependencies": {
     "@async/api-contract": "0.1.1",
     "@async/claims": "0.2.0",
-    "@async/pipeline": "0.4.4"
+    "@async/pipeline": "0.8.2"
   }
 }
